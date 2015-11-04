@@ -1,9 +1,16 @@
 set(_sources
 	Application.cpp
+	Backend.cpp
+	EventEmitter.cpp
+	EventLoop.cpp
 )
 
 set(_headers
-	Application.h	
+	Application.h
+	Backend.h
+	EventEmitter.h
+	TypeTag.h
+	EventLoop.h
 )
 
 add_library(Core ${_sources} ${_headers})
