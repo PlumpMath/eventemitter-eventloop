@@ -37,6 +37,17 @@ public:
 		return p < rhs.p;
 	}
 
+	TypeTag<_Base, _Tag> operator++(int inc)
+	{
+		return TypeTag(p++);
+	}
+
+	TypeTag<_Base, _Tag>& operator++()
+	{
+		++p;
+		return *this;
+	}
+
 private:
     _Base p;
 };

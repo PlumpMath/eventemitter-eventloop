@@ -4,8 +4,10 @@
 #include <algorithm>
 #include <cassert>
 #include <future>
+#include <iterator>
 #include <list>
 #include <mutex>
+
 
 namespace Core
 {
@@ -43,7 +45,7 @@ ListenerId EventEmitter::AddEventListener(EventId eventId, std::function<void()>
 		return ListenerId(0);
 	}
 	std::lock_guard<std::mutex> lock(m_mutex);
-	ListenerId nextListenerId = ListenerId(++m_lastRawListenerId);
+	ListenerId nextListenerId = ++m_lastRawListenerId++;
 	m_registry.insert(
 		std::make_pair(eventId, std::make_shared<Listener<>>(nextListenerId, cb, once, eventType))
 	);
@@ -61,7 +63,7 @@ ListenerId EventEmitter::AddEventListener(EventId, std::function<void(Arguments.
 
 	std::lock_guard<std::mutex> lock(m_mutex);
 
-	auto nextListenerId = ListenerId(++m_lastRawListenerId);
+	auto nextListenerId = m_lastRawListenerId++;
 	m_registry.insert(
 		std::make_pair(eventId, std::make_shared<Listener<Arguments...>>(nextListenerId, cb, once, eventType) )
 	);
@@ -110,8 +112,11 @@ void EventEmitter::Emit(EventId eventId, Arguments... args)
 		}
 		else if (c->eventType == ThreadLocal)
 		{
-			// push into the calling thread's event loop.
-			c->threadId;
+			s_threadCallees.insert(std::make_pair(
+					std::this_thread::get_id(),
+					std::make_shared<Callee<Arguments...>>(c->callback, args...)
+			));
+
 		}
 		else
 		{
@@ -128,6 +133,34 @@ void EventEmitter::Emit(EventId eventId, Arguments... args)
 void EventEmitter::Emit(EventId eventId)
 {
 	Emit<>(eventId);
+}
+
+void EventEmitter::ProcessEvents()
+{
+
+	std::list<std::shared_ptr<CalleeBase>> callbacks;
+
+	// scope - mutex guard to copy and remove the callees
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		auto range = s_threadCallees.equal_range(std::this_thread::get_id());
+		callbacks.resize(std::distance(range.first, range.second));
+
+		std::transform(range.first, range.second, callbacks.begin(), [](auto& pair)
+		{
+			return pair.second;
+		});
+		s_threadCallees.erase(std::this_thread::get_id());
+	}
+
+	// Safe to invoke the callees.
+	for (auto& c : callbacks)
+	{
+		c->callback();
+	}
+
+	// the shared pointers should go out of scope entirely now, and be deleted.
 }
 
 } // namespace Core

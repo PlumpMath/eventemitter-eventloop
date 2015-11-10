@@ -27,6 +27,7 @@
 #include "Core/TypeTag.h"
 
 #include <functional>
+#include <thread>
 #include <mutex>
 #include <map>
 
@@ -53,22 +54,17 @@ public:
 		Async = 2
 	};
 
-	/**
-	 * @brief simple On for a callback without arguments.
-	 *
-	 * Because compilers have issues with the expanded template version below when
-	 * there are no params in the list.
-	 */
-	ListenerId On(EventId eventId, std::function<void()> callback, EventType = Immediate);
+
+	ListenerId On(EventId eventId, std::function<void()> callback, EventType = Async);
 
     template <typename... Arguments>
-    ListenerId On(EventId eventId, std::function<void(Arguments...)> callback, EventType = Immediate);
+    ListenerId On(EventId eventId, std::function<void(Arguments...)> callback, EventType = Async);
 
 
-	ListenerId Once(EventId eventId, std::function<void()> callback, EventType = Immediate);
+	ListenerId Once(EventId eventId, std::function<void()> callback, EventType = Async);
 
 	template <typename... Arguments>
-	ListenerId Once(EventId eventId, std::function<void(Arguments...)> callback, EventType = Immediate);
+	ListenerId Once(EventId eventId, std::function<void(Arguments...)> callback, EventType = Async);
 
     void Off(ListenerId);
 
@@ -77,14 +73,11 @@ public:
 
 	void Emit(EventId);
 
-protected:
-    void ProcessEvents();
-
 private:
     struct ListenerBase
     {
         ListenerBase(){}
-        explicit ListenerBase(ListenerId lid, std::shared_ptr<EventLoopRegistry> registry = nullptr, bool once = false, EventType eventType = Immediate)
+        explicit ListenerBase(ListenerId lid, std::shared_ptr<EventLoopRegistry> registry = nullptr, bool once = false, EventType eventType = Async)
 			: listenerId(lid)
 			, once(once)
 			, eventType(eventType)
@@ -106,7 +99,7 @@ private:
     struct Listener : public ListenerBase
     {
         Listener() {}
-        Listener(ListenerId lid, std::function<void(Arguments...)> cb, bool once = false, EventType eventType = Immediate)
+        Listener(ListenerId lid, std::function<void(Arguments...)> cb, bool once = false, EventType eventType = Async)
             : ListenerBase(lid, nullptr, once, eventType)
             , callback(cb)
         {
@@ -115,19 +108,43 @@ private:
         std::function<void(Arguments...)> callback;
     };
 
-private:
-	ListenerId AddEventListener(EventId eventId, std::function<void()> callback, bool once = false, EventType = Immediate);
+	struct CalleeBase
+	{
+		CalleeBase() {}
+		virtual ~CalleeBase() {}
+		std::function<void()> callback;
+	};
 
 	template <typename... Arguments>
-	ListenerId AddEventListener(EventId eventId, std::function<void(Arguments...)> callback, bool once = false, EventType = Immediate);
+	struct Callee : public CalleeBase
+	{
+		explicit Callee(std::function<void(Arguments...)> cb, Arguments... arguments)
+			: CalleeBase()
+		{
+			callback = [=]()
+			{
+				cb(arguments...);
+			};
+		}
+	};
+	void ProcessEvents();
+
+private:
+	ListenerId AddEventListener(EventId eventId, std::function<void()> callback, bool once, EventType eventType);
+
+	template <typename... Arguments>
+	ListenerId AddEventListener(EventId eventId, std::function<void(Arguments...)> callback, bool once, EventType eventType);
 
     EventEmitter(const EventEmitter&) = delete;
     const EventEmitter& operator= (const EventEmitter&) = delete;
 
 private:
     std::mutex m_mutex;
-    unsigned int m_lastRawListenerId{0};
-    std::multimap<EventId, std::shared_ptr<ListenerBase>> m_registry;
+    ListenerId m_lastRawListenerId{0};
+	typedef std::multimap<EventId, std::shared_ptr<ListenerBase>> EventMap;
+    EventMap m_registry;
+
+	std::multimap<std::thread::id, std::shared_ptr<CalleeBase>> s_threadCallees;
 };
 
 } // namespace Core
