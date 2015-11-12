@@ -9,8 +9,10 @@ set(_headers
 	Application.h
 	Backend.h
 	EventEmitter.h
-	TypeTag.h
 	EventLoop.h
+	Log.h
+	TypeTag.h
+
 )
 
 add_library(Core ${_sources} ${_headers})

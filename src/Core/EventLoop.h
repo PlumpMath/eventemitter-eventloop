@@ -1,39 +1,47 @@
 #pragma once
 
 #include <thread>
-#include <iostream>
+#include <functional>
 #include <map>
 
 namespace Core
 {
 
-class ThreadWatcher
+struct CalleeBase
 {
-public:
-	ThreadWatcher()
-	{
-		std::cout << "thread created " << std::this_thread::get_id() << std::endl;
-	}
-	~ThreadWatcher()
-	{
-		std::cout << "thread destroyed " << std::this_thread::get_id() << std::endl;
-	}
+	CalleeBase() {}
+	virtual ~CalleeBase() {}
+	std::function<void()> callback;
 };
 
-namespace
+template <typename... Arguments>
+struct Callee : public CalleeBase
 {
-	thread_local ThreadWatcher s_watcher;
-}
+	explicit Callee(std::function<void(Arguments...)> cb, Arguments... arguments)
+		: CalleeBase()
+	{
+		callback = [=]()
+		{
+			cb(arguments...);
+		};
+	}
+};
 
 class EventLoop
 {
 public:
-	static EventLoop* GetThreadLoop();
-	static void DispatchEvents();
+	static void ProcessEvents();
+
+	static void DispatchEvent(std::thread::id threadId, std::shared_ptr<CalleeBase> callee);
 
 private:
 
 
+	typedef std::multimap<std::thread::id, std::shared_ptr<CalleeBase>> CalleeMap;
+	typedef std::multimap<std::thread::id, std::function<void()>> FunctionMap;
+
+	static CalleeMap& GetCalleeMap();
+	static FunctionMap& GetFunctionMap();
 };
 
 } // namespace Core

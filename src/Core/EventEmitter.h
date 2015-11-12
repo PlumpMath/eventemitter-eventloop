@@ -19,12 +19,11 @@
  *	TODO:
  *	Off() should remove the callback from thread storage.
  *	Emit() should ensure the thread is running before adding a callback into it's map.
- *  An EventLoop is necessary.  Emit should call EventLoop::PostEvent(threadId, callback)
- *  Alternatively, calling On() should do a threadId test and create thread local storage that way?
  */
 #pragma once
 
 #include "Core/TypeTag.h"
+#include "Core/EventLoop.h"
 
 #include <functional>
 #include <thread>
@@ -44,21 +43,21 @@ class EventLoopRegistry;
 class EventEmitter
 {
 public:
-    EventEmitter();
-    ~EventEmitter();
+	EventEmitter();
+	~EventEmitter();
 
 	enum EventType
 	{
 		Immediate = 0,
-		ThreadLocal = 1,
+		EventLoop = 1,
 		Async = 2
 	};
 
 
 	ListenerId On(EventId eventId, std::function<void()> callback, EventType = Async);
 
-    template <typename... Arguments>
-    ListenerId On(EventId eventId, std::function<void(Arguments...)> callback, EventType = Async);
+	template <typename... Arguments>
+	ListenerId On(EventId eventId, std::function<void(Arguments...)> callback, EventType = Async);
 
 
 	ListenerId Once(EventId eventId, std::function<void()> callback, EventType = Async);
@@ -66,68 +65,47 @@ public:
 	template <typename... Arguments>
 	ListenerId Once(EventId eventId, std::function<void(Arguments...)> callback, EventType = Async);
 
-    void Off(ListenerId);
+	void Off(ListenerId);
 
 	template <typename... Arguments>
-    void Emit(EventId, Arguments... arguments);
+	void Emit(EventId, Arguments... arguments);
 
 	void Emit(EventId);
 
 private:
-    struct ListenerBase
-    {
-        ListenerBase(){}
-        explicit ListenerBase(ListenerId lid, std::shared_ptr<EventLoopRegistry> registry = nullptr, bool once = false, EventType eventType = Async)
+	struct ListenerBase
+	{
+		ListenerBase(){}
+		explicit ListenerBase(ListenerId lid, std::shared_ptr<EventLoopRegistry> registry = nullptr, bool once = false, EventType eventType = Async)
 			: listenerId(lid)
 			, once(once)
 			, eventType(eventType)
 			, threadId(std::this_thread::get_id())
-        {
+		{
 
-        }
-        virtual ~ListenerBase() {}
-        ListenerId listenerId; // Listener ID for management
+		}
+		virtual ~ListenerBase() {}
+		ListenerId listenerId; // Listener ID for management
 		bool once{ false }; // should the event self-remove after processing?
 		EventType eventType{ Immediate };
 		std::thread::id threadId;
-    };
+	};
 
 	/**
 	 *	Behold!  Type Erasure!
 	 */
-    template <typename... Arguments>
-    struct Listener : public ListenerBase
-    {
-        Listener() {}
-        Listener(ListenerId lid, std::function<void(Arguments...)> cb, bool once = false, EventType eventType = Async)
-            : ListenerBase(lid, nullptr, once, eventType)
-            , callback(cb)
-        {
-            // empty
-        }
-        std::function<void(Arguments...)> callback;
-    };
-
-	struct CalleeBase
-	{
-		CalleeBase() {}
-		virtual ~CalleeBase() {}
-		std::function<void()> callback;
-	};
-
 	template <typename... Arguments>
-	struct Callee : public CalleeBase
+	struct Listener : public ListenerBase
 	{
-		explicit Callee(std::function<void(Arguments...)> cb, Arguments... arguments)
-			: CalleeBase()
+		Listener() {}
+		Listener(ListenerId lid, std::function<void(Arguments...)> cb, bool once = false, EventType eventType = Async)
+			: ListenerBase(lid, nullptr, once, eventType)
+			, callback(cb)
 		{
-			callback = [=]()
-			{
-				cb(arguments...);
-			};
+			// empty
 		}
+		std::function<void(Arguments...)> callback;
 	};
-	void ProcessEvents();
 
 private:
 	ListenerId AddEventListener(EventId eventId, std::function<void()> callback, bool once, EventType eventType);
@@ -135,16 +113,15 @@ private:
 	template <typename... Arguments>
 	ListenerId AddEventListener(EventId eventId, std::function<void(Arguments...)> callback, bool once, EventType eventType);
 
-    EventEmitter(const EventEmitter&) = delete;
-    const EventEmitter& operator= (const EventEmitter&) = delete;
+	EventEmitter(const EventEmitter&) = delete;
+	const EventEmitter& operator= (const EventEmitter&) = delete;
 
 private:
-    std::mutex m_mutex;
-    ListenerId m_lastRawListenerId{0};
+	std::mutex m_mutex;
+	ListenerId m_lastRawListenerId{0};
 	typedef std::multimap<EventId, std::shared_ptr<ListenerBase>> EventMap;
-    EventMap m_registry;
+	EventMap m_registry;
 
-	std::multimap<std::thread::id, std::shared_ptr<CalleeBase>> s_threadCallees;
 };
 
 } // namespace Core
