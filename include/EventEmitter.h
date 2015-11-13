@@ -22,8 +22,8 @@
  */
 #pragma once
 
-#include "Core/TypeTag.h"
-#include "Core/EventLoop.h"
+#include "TypeTag.h"
+#include "EventLoop.h"
 
 #include <functional>
 #include <thread>

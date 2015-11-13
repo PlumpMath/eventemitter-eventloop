@@ -1,5 +1,4 @@
 #include "EventLoop.h"
-#include "Log.h"
 
 #include <algorithm>
 #include <functional>
@@ -18,7 +17,6 @@ namespace
 
 void EventLoop::DispatchEvent(std::thread::id threadId, std::shared_ptr<CalleeBase> callee)
 {
-	LOG("dispatching thread-specific Callee to " << threadId)
 	std::lock_guard<std::mutex> lock(s_eventLoopMutex);
 	GetCalleeMap().insert(std::make_pair(
 		threadId,

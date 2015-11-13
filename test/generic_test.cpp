@@ -1,5 +1,6 @@
-#include "Core/EventEmitter.h"
-#include "Core/Log.h"
+#include "EventEmitter.h"
+#include "EventLoop.h"
+#include "Log.h"
 #include <thread>
 #include <chrono>
 #include <mutex>
@@ -29,7 +30,7 @@ public:
 		// scope to serialize access to std::cout
 		LOG("             binding event on thread " << std::this_thread::get_id())
 
-		g_emitter->On(testEvent, m_function, Core::EventEmitter::EventLoop);
+			g_emitter->On(testEvent, m_function, Core::EventEmitter::EventLoop);
 		do
 		{
 			std::this_thread::sleep_for(1s);
@@ -77,7 +78,7 @@ int main(int argc, char** argv)
 
 		std::this_thread::sleep_for(4s);
 		LOG("=============== FIRING EVENT 1 FROM " << std::this_thread::get_id() << " ==================")
-		g_emitter->Emit(testEvent);
+			g_emitter->Emit(testEvent);
 		std::this_thread::sleep_for(4s);
 		g_running = false;
 

@@ -1,5 +1,4 @@
 #include "EventEmitter.h"
-#include "Log.h"
 
 #include <algorithm>
 #include <cassert>

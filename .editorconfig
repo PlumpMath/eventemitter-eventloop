@@ -2,5 +2,5 @@
 trim_trailing_whitespace = true
 
 [*.h,*.cpp,CMakeLists.txt]
-indent_style = space
+indent_style = tab
 indent_size = tab
