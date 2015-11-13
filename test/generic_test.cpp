@@ -31,8 +31,8 @@ SOFTWARE.
 namespace {
 	std::mutex g_mutex;
 	bool g_running = true;
-	Core::EventEmitter* g_emitter = nullptr;
-	auto testEvent = Core::EventId(1);
+	EventEmitter::Emitter* g_emitter = nullptr;
+	auto testEvent = EventEmitter::EventId(1);
 
 } // anonymous namespace
 
@@ -51,11 +51,11 @@ public:
 		// scope to serialize access to std::cout
 		LOG("             binding event on thread " << std::this_thread::get_id())
 
-			g_emitter->On(testEvent, m_function, Core::EventEmitter::EventLoop);
+			g_emitter->On(testEvent, m_function, EventEmitter::Dispatch);
 		do
 		{
 			std::this_thread::sleep_for(1s);
-			Core::EventLoop::ProcessEvents();
+			EventEmitter::EventLoop::ProcessEvents();
 		} while (g_running);
 	}
 
@@ -67,12 +67,12 @@ int main(int argc, char** argv)
 	{
 		using namespace std::literals;
 
-		g_emitter = new Core::EventEmitter;
+		g_emitter = new EventEmitter::Emitter;
 
 		g_emitter->On(testEvent, []()
 		{
 			LOG("[EVENT      ] This should be the main thread " << std::this_thread::get_id())
-		}, Core::EventEmitter::Immediate);
+		}, EventEmitter::Immediate);
 
 
 		g_emitter->On(testEvent, []()
@@ -104,9 +104,4 @@ int main(int argc, char** argv)
 		g_running = false;
 
 	}
-#if defined(WIN32)
-	system("pause");
-#else
-	system("read");
-#endif
 }

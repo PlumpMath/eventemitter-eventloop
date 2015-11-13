@@ -74,28 +74,30 @@ SOFTWARE.
 #include <mutex>
 #include <map>
 
-namespace Core {
+namespace EventEmitter {
 
 typedef TypeTag<unsigned int, class _ListenerId_Type> ListenerId;
 typedef TypeTag<unsigned int, class _EventId_Type>    EventId;
 
 
 class EventLoopRegistry;
+
+enum EventType
+{
+	Immediate = 0,
+	Dispatch = 1,
+	Async = 2
+};
+
 /**
  * @brief      Base class for objects that can emit events.
  */
-class EventEmitter
+class Emitter
 {
 public:
-	EventEmitter();
-	~EventEmitter();
+	Emitter();
+	~Emitter();
 
-	enum EventType
-	{
-		Immediate = 0,
-		EventLoop = 1,
-		Async = 2
-	};
 
 
 	ListenerId On(EventId eventId, std::function<void()> callback, EventType = Async);
@@ -157,8 +159,8 @@ private:
 	template <typename... Arguments>
 	ListenerId AddEventListener(EventId eventId, std::function<void(Arguments...)> callback, bool once, EventType eventType);
 
-	EventEmitter(const EventEmitter&) = delete;
-	const EventEmitter& operator= (const EventEmitter&) = delete;
+	Emitter(const Emitter&) = delete;
+	const Emitter& operator= (const Emitter&) = delete;
 
 private:
 	std::mutex m_mutex;

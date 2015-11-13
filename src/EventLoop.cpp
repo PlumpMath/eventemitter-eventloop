@@ -28,7 +28,7 @@ SOFTWARE.
 #include <mutex>
 #include <thread>
 
-namespace Core
+namespace EventEmitter
 {
 
 namespace
@@ -63,15 +63,6 @@ void EventLoop::ProcessEvents()
 			return pair.second;
 		});
 		GetCalleeMap().erase(std::this_thread::get_id());
-
-		auto frange = GetFunctionMap().equal_range(std::this_thread::get_id());
-		functions.resize(std::distance(frange.first, frange.second));
-		std::transform(frange.first, frange.second, functions.begin(), [](auto& pair)
-		{
-			return pair.second;
-		});
-		GetFunctionMap().erase(std::this_thread::get_id());
-
 	}
 
 	// Safe to invoke the callees.
@@ -90,12 +81,5 @@ EventLoop::CalleeMap& EventLoop::GetCalleeMap()
 	static CalleeMap s_map;
 	return s_map;
 }
-
-EventLoop::FunctionMap& EventLoop::GetFunctionMap()
-{
-	static FunctionMap s_map;
-	return s_map;
-}
-
 
 } // namespace Core

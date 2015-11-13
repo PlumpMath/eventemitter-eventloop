@@ -23,7 +23,7 @@ SOFTWARE.
 
 #include <utility>
 
-namespace Core
+namespace EventEmitter
 {
 
 /**

@@ -25,7 +25,7 @@ SOFTWARE.
 #include <functional>
 #include <map>
 
-namespace Core
+namespace EventEmitter
 {
 
 struct CalleeBase
@@ -56,13 +56,8 @@ public:
 	static void DispatchEvent(std::thread::id threadId, std::shared_ptr<CalleeBase> callee);
 
 private:
-
-
 	typedef std::multimap<std::thread::id, std::shared_ptr<CalleeBase>> CalleeMap;
-	typedef std::multimap<std::thread::id, std::function<void()>> FunctionMap;
-
 	static CalleeMap& GetCalleeMap();
-	static FunctionMap& GetFunctionMap();
 };
 
 } // namespace Core
