@@ -34,4 +34,4 @@ EventEmitter::EventLoop::ProcessEvents(); // now EventId(3) fires.
 ```
 
 ## Why?  There's like a hundred libraries that do this already
-I like to lear by doing and I wanted to learn more about some async concepts and type-erasure.
+I like to learn by doing and I wanted to learn more about some async concepts and type-erasure.
