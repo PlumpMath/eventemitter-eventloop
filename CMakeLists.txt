@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 3.0.0)
 
 project (EventEmitter)
 
-include_directories (${CMAKE_SOURCE_DIR}/include)
+include_directories (${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 set (_sources
 	src/EventEmitter.cpp
@@ -16,6 +16,15 @@ set (_headers
 )
 
 add_library (EventEmitter ${_sources} ${_headers})
+set_target_properties(EventEmitter PROPERTIES DEBUG_POSTFIX d)
 
+
+install (
+	DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include
+	DESTINATION include/EventEmitter
+)
+install (
+	TARGETS EventEmitter DESTINATION lib
+)
 enable_testing ()
 add_subdirectory (test)
