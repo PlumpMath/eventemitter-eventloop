@@ -20,7 +20,7 @@ set_target_properties(EventEmitter PROPERTIES DEBUG_POSTFIX d)
 
 
 install (
-	DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include
+	DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
 	DESTINATION include/EventEmitter
 )
 install (
