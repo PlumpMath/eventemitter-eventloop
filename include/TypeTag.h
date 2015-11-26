@@ -48,22 +48,22 @@ public:
 	explicit TypeTag(_Base i = _Base()) : p(i) {}
 	bool operator==(const TypeTag& other) { return p == other.p; }
 
-	friend bool operator<(const TypeTag<_Base, _Tag>& lhs, const TypeTag<_Base, _Tag>& rhs)
+	friend bool operator<(const TypeTag& lhs, const TypeTag& rhs)
 	{
 		return lhs.p < rhs.p;
 	}
 
-	bool operator<(const TypeTag<_Base, _Tag>& rhs)
+	bool operator<(const TypeTag& rhs)
 	{
 		return p < rhs.p;
 	}
 
-	TypeTag<_Base, _Tag> operator++(int inc)
+	TypeTag operator++(int inc)
 	{
 		return TypeTag(p++);
 	}
 
-	TypeTag<_Base, _Tag>& operator++()
+	TypeTag& operator++()
 	{
 		++p;
 		return *this;

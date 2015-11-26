@@ -5,13 +5,13 @@ project (EventEmitter)
 include_directories (${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 set (_sources
-	src/EventEmitter.cpp
-	src/EventLoop.cpp
+	src/Emitter.cpp
+	src/Registry.cpp
 )
 
 set (_headers
-	include/EventEmitter.h
-	include/EventLoop.h
+	include/Emitter.h
+	include/Registry.h
 	include/TypeTag.h
 )
 

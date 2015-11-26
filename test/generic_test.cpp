@@ -19,8 +19,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 **/
-#include "EventEmitter.h"
-#include "EventLoop.h"
+#include "Emitter.h"
+#include "Registry.h"
 #include "Log.h"
 #include <thread>
 #include <chrono>
@@ -33,7 +33,6 @@ namespace {
 	bool g_running = true;
 	EventEmitter::Emitter* g_emitter = nullptr;
 	auto testEvent = EventEmitter::EventId(1);
-
 } // anonymous namespace
 
 
@@ -55,7 +54,7 @@ public:
 		do
 		{
 			std::this_thread::sleep_for(1s);
-			EventEmitter::EventLoop::ProcessEvents();
+			EventEmitter::Registry::ProcessEvents();
 		} while (g_running);
 	}
 
@@ -104,4 +103,5 @@ int main(int argc, char** argv)
 		g_running = false;
 
 	}
+	system("pause");
 }
