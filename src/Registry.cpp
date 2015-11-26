@@ -40,19 +40,27 @@ void Registry::ThreadLocalRegistry::Process()
 
 void Registry::AddRegistry(std::thread::id threadId, ThreadLocalRegistry* localRegistry)
 {
+	std::lock_guard<std::mutex> lock(m_mutex);
 	m_registryMap.insert(std::make_pair(threadId, localRegistry));
 }
 
 void Registry::RemoveRegistry(std::thread::id threadId)
 {
+	std::lock_guard<std::mutex> lock(m_mutex);
 	m_registryMap.erase(threadId);
 }
 
+/**
+ * Just a static wrapper around an specific object.
+ */
 void Registry::DispatchEvent(std::thread::id threadId, Callback callback)
 {
 	s_registry.Dispatch(threadId, callback);
 }
 
+/**
+* Just a static wrapper around an specific object.
+*/
 void Registry::ProcessEvents()
 {
 	s_registry.Process();
@@ -60,6 +68,10 @@ void Registry::ProcessEvents()
 
 void Registry::Dispatch(std::thread::id threadId, Callback callback)
 {
+	// dispatching needs to be guarded to prevent the thread being
+	// deleted while the registry is being looked-up or dispatched to
+	std::lock_guard<std::mutex> lock(m_mutex);
+
 	auto registry = m_registryMap.find(threadId);
 	if (registry != m_registryMap.end())
 	{
@@ -69,7 +81,8 @@ void Registry::Dispatch(std::thread::id threadId, Callback callback)
 
 void Registry::Process()
 {
+	// ThreadLocalRegistry::Process has it's own thread-specific mutex.
 	l_registry.Process();
 }
 
- } // namespace EventEmitter
+} // namespace EventEmitter
