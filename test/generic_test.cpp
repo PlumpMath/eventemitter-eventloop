@@ -33,6 +33,7 @@ namespace {
 	bool g_running = true;
 	EventEmitter::Emitter* g_emitter = nullptr;
 	auto testEvent = EventEmitter::EventId(1);
+	EventEmitter::EventId rvalueEvent = 2u;
 } // anonymous namespace
 
 

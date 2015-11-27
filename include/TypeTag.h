@@ -45,7 +45,8 @@ template <class _Base, class _Tag> // requires LessThanComparable<_Base>
 class TypeTag
 {
 public:
-	explicit TypeTag(_Base i = _Base()) : p(i) {}
+	TypeTag(_Base i = _Base()) : p(i) {}
+
 	bool operator==(const TypeTag& other) { return p == other.p; }
 
 	friend bool operator<(const TypeTag& lhs, const TypeTag& rhs)
@@ -72,5 +73,6 @@ public:
 private:
 	_Base p;
 };
+
 
 } // namespace Core
