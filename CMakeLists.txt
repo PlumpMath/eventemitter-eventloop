@@ -26,5 +26,4 @@ install (
 install (
 	TARGETS EventEmitter DESTINATION lib
 )
-enable_testing ()
-add_subdirectory (test)
+set_property(TARGET EventEmitter PROPERTY CXX_STANDARD 11)

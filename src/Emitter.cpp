@@ -58,7 +58,7 @@ ListenerId Emitter::AddEventListener(EventId eventId, std::function<void()> cb, 
 }
 
 template <typename... Arguments>
-ListenerId Emitter::AddEventListener(EventId, std::function<void(Arguments...)> cb, bool once, EventType eventType)
+ListenerId Emitter::AddEventListener(EventId eventId, std::function<void(Arguments...)> cb, bool once, EventType eventType)
 {
 	if (!cb)
 	{
@@ -116,7 +116,7 @@ void Emitter::Emit(EventId eventId, Arguments... args)
 		}
 		else if (c->eventType == Dispatch)
 		{
-			Registry::DispatchEvent(c->threadId, [c]() {c->callback(args...); });
+			Registry::DispatchEvent(c->threadId, [c, args...]() {c->callback(args...); });
 		}
 		else
 		{
